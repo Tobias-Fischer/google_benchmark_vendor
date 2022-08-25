@@ -1,13 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(google_benchmark_vendor CXX)
 
-option(FORCE_BUILD_VENDOR_PKG
-  "Build google benchmark from source, even if system-installed package is available"
-  OFF)
-
-if(NOT FORCE_BUILD_VENDOR_PKG)
-  find_package(benchmark QUIET)
-endif()
+find_package(benchmark REQUIRED)
 
 macro(build_benchmark)
   set(extra_cmake_args)
@@ -78,18 +72,6 @@ macro(build_benchmark)
     USE_SOURCE_PERMISSIONS
   )
 endmacro()
-
-if(NOT benchmark_FOUND OR "${benchmark_VERSION}" VERSION_LESS 1.6.1)
-  build_benchmark()
-elseif(benchmark_FOUND)
-  # Ubuntu Focal and Jammy have a packaging bug where libbenchmark_main has no symbols,
-  # causing linker failures. I'm pretty sure it shouldn't be a static library.
-  # Details: https://bugs.launchpad.net/ubuntu/+source/benchmark/+bug/1887872
-  get_target_property(_benchmark_main_type benchmark::benchmark_main TYPE)
-  if(NOT "${_benchmark_main_type}" STREQUAL "SHARED_LIBRARY")
-    build_benchmark()
-  endif()
-endif()
 
 install(
   FILES package.xml
